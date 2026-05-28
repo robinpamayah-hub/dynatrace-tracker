@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynatrace Account Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0d0d1a;color:#f0f0ff;padding:20px;min-height:100vh}
+.grad{background:linear-gradient(135deg,#2b4fcc,#6f2da8)}
+.header{border-radius:10px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sep{color:rgba(255,255,255,0.3);font-size:22px;font-weight:100}
+#acctName{font-size:15px;font-weight:700;color:#fff;cursor:pointer;border-bottom:1px dashed rgba(255,255,255,0.4);background:none;border-top:none;border-left:none;border-right:none;outline:none;padding:2px 4px}
+.btn{font-size:12px;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:400;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff}
+.btn-primary{background:rgba(255,255,255,0.92);color:#1a1a35;font-weight:700;border:none}
+.btn:hover{background:rgba(255,255,255,0.2)}
+.btn-primary:hover{background:#fff}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.metric{background:#1a1a35;border-radius:8px;padding:14px 16px;border-top:2px solid #1a7aff}
+.metric.warn{border-top-color:#ff3b3b}
+.metric label{font-size:10px;color:#8888bb;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px}
+.metric .val{font-size:28px;font-weight:700;color:#fff;line-height:1;margin-bottom:3px}
+.metric.warn .val{color:#ff3b3b}
+.metric .sub{font-size:11px;color:#8888bb}
+.now-bar{background:#1a1a35;border:1px solid #6f2da866;border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.now-pill{color:#fff;border-radius:4px;padding:3px 10px;font-size:11px;font-weight:800;letter-spacing:.05em;white-space:nowrap}
+.tabs{display:flex;border-bottom:1px solid #2e2e55;margin-bottom:16px;overflow-x:auto}
+.tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 18px;font-size:13px;font-weight:400;color:#8888bb;cursor:pointer;white-space:nowrap;margin-bottom:-1px}
+.tab.active{color:#fff;font-weight:700;border-bottom-color:#00a8e0}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{font-size:10px;font-weight:700;color:#8888bb;padding:9px 12px;text-align:left;border-bottom:1px solid #3a3a66;background:#12122a;white-space:nowrap;letter-spacing:.07em;text-transform:uppercase}
+td{font-size:12px;padding:10px 12px;border-bottom:1px solid #2e2e55;vertical-align:top;color:#f0f0ff}
+tr:nth-child(even) td{background:#12122a}
+tr:nth-child(odd) td{background:#1a1a35}
+.badge{border-radius:4px;padding:2px 9px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid}
+.add-btn{margin-top:14px;font-size:12px;padding:6px 16px;border-radius:4px;border:1px solid #3a3a66;color:#8888bb;background:transparent;cursor:pointer}
+.add-btn:hover{background:#1a1a35}
+input,select,textarea{font-size:12px;color:#f0f0ff;background:#0d0d1a;border:1px solid #3a3a66;border-radius:4px;padding:4px 8px;outline:none;font-family:Arial,sans-serif}
+textarea{resize:vertical}
+.edit-btn{background:none;border:none;cursor:pointer;color:#00a8e0;font-size:12px;padding:2px 4px;font-weight:700}
+.del-btn{background:none;border:none;cursor:pointer;color:#44446a;font-size:12px;padding:2px 4px}
+.journey-wrap{position:relative;padding-left:36px}
+.journey-line{position:absolute;left:14px;top:4px;bottom:4px;width:2px;background:linear-gradient(135deg,#2b4fcc,#6f2da8)}
+.j-item{position:relative;margin-bottom:14px}
+.j-dot{position:absolute;left:-29px;top:6px;width:18px;height:18px;border-radius:50%;background:#0d0d1a;border:2px solid #44446a;display:flex;align-items:center;justify-content:center;z-index:1}
+.j-card{border-radius:8px;padding:12px 16px;border:1px solid #2e2e55;background:#12122a}
+.j-card.current{background:#1a1a35;border-color:#6f2da888}
+.j-dates{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;margin-bottom:4px}
+.j-date-field label{font-size:10px;color:#8888bb;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:3px}
+.j-date-field span{font-size:12px;color:#f0f0ff}
+.footer{margin-top:20px;padding-top:12px;border-top:1px solid #2e2e55;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.footer span{font-size:11px;color:#44446a}
+.toast{position:fixed;top:20px;right:20px;background:#00c853;color:#fff;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:700;display:none;z-index:999}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="header grad" id="header">
+<div class="header-left">
+<a href="/" style="text-decoration:none;display:flex;align-items:center;gap:6px">
+<img src="https://cdn.simpleicons.org/dynatrace/ffffff" alt="Dynatrace" style="height:28px" onerror="this.outerHTML='<span style=font-size:18px;font-weight:800;color:#fff;font-style:italic>dynatrace</span>'">
+</a>
+<span class="sep">|</span>
+<input id="acctName" value="" placeholder="Click to add account name" oninput="updateTitle()" /> tracker
+</div>
+<div class="header-right">
+<a href="/" class="btn" style="text-decoration:none">Home</a>
+<span id="savedMsg" style="font-size:12px;color:#fff;font-weight:600;display:none">Saved</span>
+<button class="btn btn-primary" onclick="saveData()">Save</button>
+<button class="btn" onclick="exportExcel()">Export Excel</button>
+<button class="btn" onclick="exportSlides()">Download Slides</button>
+<button class="btn" onclick="toggleFullScreen()">Full Screen</button>
+<button class="btn" onclick="resetData()">Reset</button>
+</div>
+</div>
+
+<div class="metrics">
+<div class="metric" id="m0"><label>Open actions</label><div class="val" id="mv0">0</div><div class="sub" id="ms0"></div></div>
+<div class="metric warn" id="m1"><label>At risk / blocked</label><div class="val" id="mv1">0</div><div class="sub" id="ms1">items need attention</div></div>
+<div class="metric" id="m2"><label>Deliverables</label><div class="val" id="mv2">0</div><div class="sub" id="ms2"></div></div>
+</div>
+
+<div class="now-bar" id="nowBar" style="display:none">
+<span class="now-pill grad">NOW</span>
+<span id="nowText" style="font-size:13px;color:#8888bb"></span>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div id="content"></div>
+
+<div class="footer">
+<span>Dynatrace account tracker — click account name to rename for any customer</span>
+<span>2026 RSTM Labs</span>
+</div>
+
+<script>
+const TABS = ["Journey","Action Items","Roadmap","Meetings","Deliverables","Ford Comms"];
+let activeTab = 0;
+let state = {acct:"",journey:[{id:1,phase:"Problem identified",planned:"Apr 2026",actual:"Apr 2026",delivery:"",status:"done",detail:"Ford flagged cost transparency as top priority. Unable to show cost breakdown by application team or business unit."},{id:2,phase:"Short-term solution built",planned:"May 1, 2026",actual:"May 13, 2026",delivery:"May 13, 2026",status:"done",detail:"Custom app built to approximate top billable metrics. Presented to Ford. Rejected as a permanent solution."},{id:3,phase:"Executive escalation",planned:"May 15, 2026",actual:"May 26, 2026",delivery:"",status:"done",detail:"Trevor Ealy joined as exec sponsor. Robin Pamayah assigned as lead."},{id:4,phase:"Working session",planned:"May 30, 2026",actual:"",delivery:"",status:"current",detail:"Align on current state, short-term options and long-term solution. Define mock data views and committed dates."},{id:5,phase:"Short-term delivery",planned:"Jun 15, 2026",actual:"",delivery:"",status:"upcoming",detail:"Deliver improved cost visibility using current product capabilities."},{id:6,phase:"Product dependencies",planned:"Jul 1, 2026",actual:"",delivery:"",status:"upcoming",detail:"GCP integration, Grail tag support, and inline lookup tables released."},{id:7,phase:"Long-term solution",planned:"Sep 1, 2026",actual:"",delivery:"",status:"upcoming",detail:"Full cost allocation solution delivered. Officially supported by Dynatrace."},{id:8,phase:"Renewal conversation",planned:"Nov 1, 2026",actual:"",delivery:"",status:"upcoming",detail:"Nate Wood uses consumption data to present repackage case to leadership."}],actions:[{id:1,item:"Schedule working session with Steve Tack, Michael Winkler and account team",owner:"Robin Pamayah",dueDate:"2026-05-30",status:"In Progress",priority:"High",notes:"Trevor requested this week"},{id:2,item:"Send proposed meeting time to Trevor",owner:"Robin Pamayah",dueDate:"2026-05-28",status:"Not Started",priority:"High",notes:""},{id:3,item:"Prepare mock up of short-term data view",owner:"Mario Borja",dueDate:"2026-06-06",status:"In Progress",priority:"High",notes:"Custom app built, presented May 13"},{id:4,item:"Define long-term solution documentation",owner:"Edin Cristofi",dueDate:"2026-06-13",status:"Not Started",priority:"Medium",notes:""},{id:5,item:"Confirm dev preview drop from DT Product",owner:"Robin Pamayah",dueDate:"2026-05-30",status:"In Progress",priority:"High",notes:"Expected 1-2 weeks from May 8"}],roadmap:[{id:1,item:"New GCP Integration (PRODUCT-14940)",dependency:"GCP Tag support",eta:"June Rally",status:"In Progress",notes:"Ford invited to limited private preview"},{id:2,item:"Grail Primary Tag (PRODUCT-15406)",dependency:"Central tag capability",eta:"June Rally",status:"Not Started",notes:"Required even with new GCP integration"},{id:3,item:"Grail Tag Support (PRODUCT-15071)",dependency:"Central tag capability",eta:"June Rally",status:"Not Started",notes:"Part of June rally"},{id:4,item:"Inline Lookup Table (PRODUCT-15622)",dependency:"GCP project ID mapping",eta:"July 2026",status:"Not Started",notes:"1MB object limit"},{id:5,item:"Grail Lookup Table (PRODUCT-12169)",dependency:"GCP project ID at scale",eta:"TBD",status:"Not Started",notes:"Unknown ETA. Would exceed inline lookup limit"}],meetings:[{id:1,date:"2026-05-13",meeting:"Ford Short-Term Solution Presentation",outcome:"Custom app presented. Ford will not accept as permanent solution.",decisions:"Ford requires officially supported Dynatrace offering",followUp:"Robin Pamayah"},{id:2,date:"2026-04-29",meeting:"Ford April Governance Call",outcome:"Cost transparency top priority. Significant consumption run rate increase.",decisions:"Trevor Ealy to join as exec sponsor.",followUp:"Trevor Ealy"}],delivs:[{id:1,deliverable:"Short-term cost allocation data view",description:"Mock up of current product capability output",committed:"TBD",status:"In Progress",acceptedByFord:"Pending",owner:"Mario Borja"},{id:2,deliverable:"Long-term solution design",description:"Full cost allocation solution with roadmap dependencies",committed:"Jun-Sep 2026",status:"Not Started",acceptedByFord:"Pending",owner:"Edin Cristofi"},{id:3,deliverable:"Dev preview integration",description:"GCP project tag metadata into platform",committed:"TBD",status:"In Progress",acceptedByFord:"Pending",owner:"DT Product"},{id:4,deliverable:"Renewal data package",description:"Consumption data to support Nate Wood renewal conversation",committed:"Before Dec 2026",status:"In Progress",acceptedByFord:"Pending",owner:"Robin Pamayah"}],comms:[{id:1,date:"2026-05-13",by:"Robin Pamayah / Mario Borja",audience:"Ford stakeholders",summary:"Presented custom app as short-term solution.",response:"Will not accept as permanent. Wants officially supported offering.",next:"TBD - after working session"},{id:2,date:"2026-04-29",by:"Jason Trombley",audience:"Nate Wood, Parsh, Brum",summary:"Governance call. Cost transparency, tenant health, migration discussed.",response:"Nate Wood aligned on need to renegotiate ahead of Dec 2026.",next:"Next governance call"}]};
+const defaultState = JSON.parse(JSON.stringify(state));
+const STATUS_STYLE = {"Not Started":"background:#1a1a35;color:#8888bb;border-color:#2e2e55","In Progress":"background:#081a40;color:#1a7aff;border-color:#0f3a8a","Completed":"background:#0a2e14;color:#00c853;border-color:#0f5c28","At Risk":"background:#2a1400;color:#f0a030;border-color:#6b3300","Blocked":"background:#2e0808;color:#ff3b3b;border-color:#7a1010"};
+const PRIORITY_STYLE = {"High":"background:#2e0808;color:#ff3b3b;border-color:#7a1010","Medium":"background:#2a1400;color:#f0a030;border-color:#6b3300","Low":"background:#0a2e14;color:#00c853;border-color:#0f5c28"};
+function badge(text,styles){const s=styles[text]||"background:#1a1a35;color:#8888bb;border-color:#2e2e55";return '<span class="badge" style="'+s+'">'+text+'</span>';}
+function parseDateStr(s){if(!s)return null;const d=new Date(s);return isNaN(d)?null:d;}
+function daysDiff(dateStr){const d=parseDateStr(dateStr);if(!d)return null;const now=new Date();now.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.round((d-now)/86400000);}
+function varianceHTML(planned,actual){if(!planned||!actual)return"";const p=parseDateStr(planned),a=parseDateStr(actual);if(!p||!a)return"";const diff=Math.round((a-p)/86400000);if(diff===0)return'<span style="color:#00c853;font-size:11px">On time</span>';if(diff>0)return'<span style="color:#ff3b3b;font-size:11px">+'+diff+'d late</span>';return'<span style="color:#00c853;font-size:11px">'+diff+'d early</span>';}
+function nextId(arr){return arr.length?Math.max(...arr.map(r=>r.id))+1:1;}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2500);}
+function updateTitle(){state.acct=document.getElementById("acctName").value;document.title=(state.acct?state.acct+" — ":"")+"Dynatrace Account Tracker";}
+function toggleFullScreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function updateMetrics(){const open=state.actions.filter(a=>a.status!=="Completed").length;const risk=state.actions.filter(a=>a.status==="At Risk"||a.status==="Blocked").length+state.roadmap.filter(r=>r.status==="At Risk"||r.status==="Blocked").length;const deliv=state.delivs.length;document.getElementById("mv0").textContent=open;document.getElementById("ms0").textContent=open===1?"action item open":"action items open";document.getElementById("mv1").textContent=risk;document.getElementById("mv2").textContent=deliv;document.getElementById("ms2").textContent=state.delivs.filter(d=>d.status==="Completed").length+" of "+deliv+" completed";const cur=state.journey.find(j=>j.status==="current");const bar=document.getElementById("nowBar");if(cur){bar.style.display="flex";document.getElementById("nowText").textContent=cur.phase+(cur.planned?" — target "+cur.planned:"");}else{bar.style.display="none";}}
+function renderTabs(){const el=document.getElementById("tabs");el.innerHTML=TABS.map((t,i)=>'<button class="tab'+(i===activeTab?" active":"")+'" onclick="switchTab('+i+')">'+t+'</button>').join("");}
+function switchTab(i){activeTab=i;renderTabs();renderContent();}
+function renderContent(){updateMetrics();const el=document.getElementById("content");switch(activeTab){case 0:el.innerHTML=renderJourney();break;case 1:el.innerHTML=renderTable("actions");break;case 2:el.innerHTML=renderTable("roadmap");break;case 3:el.innerHTML=renderTable("meetings");break;case 4:el.innerHTML=renderTable("delivs");break;case 5:el.innerHTML=renderTable("comms");break;}}
+function renderJourney(){let h='<div class="journey-wrap"><div class="journey-line"></div>';state.journey.forEach((j,i)=>{const isCur=j.status==="current";const isDone=j.status==="done";const dotColor=isDone?"#00c853":isCur?"#6f2da8":"#44446a";const dotInner=isDone?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none"/></svg>':isCur?'<div style="width:8px;height:8px;border-radius:50%;background:#6f2da8"></div>':'';h+='<div class="j-item">';h+='<div class="j-dot" style="border-color:'+dotColor+(isDone?";background:#00c853":"")+'">'+dotInner+'</div>';h+='<div class="j-card'+(isCur?" current":"")+'">';h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">';h+='<div style="font-size:14px;font-weight:700;color:#fff">'+j.phase+'</div>';h+='<div style="display:flex;gap:4px">';h+='<button class="edit-btn" onclick="editJourney('+i+')">edit</button>';h+='<button class="del-btn" onclick="delJourney('+i+')">×</button>';h+='</div></div>';h+='<div class="j-dates">';h+='<div class="j-date-field"><label>Planned</label><span>'+(j.planned||"—")+'</span></div>';h+='<div class="j-date-field"><label>Actual</label><span>'+(j.actual||"—")+'</span></div>';h+='<div class="j-date-field"><label>Delivery</label><span>'+(j.delivery||"—")+'</span></div>';h+='<div class="j-date-field">'+varianceHTML(j.planned,j.actual)+'</div>';h+='</div>';h+='<div style="font-size:12px;color:#8888bb;margin-top:4px">'+(j.detail||"")+'</div>';h+='</div></div>';});h+='</div>';h+='<button class="add-btn" onclick="addJourney()">+ Add phase</button>';return h;}
+function editJourney(i){const j=state.journey[i];const phase=prompt("Phase name:",j.phase);if(phase===null)return;const planned=prompt("Planned date:",j.planned);const actual=prompt("Actual date:",j.actual);const delivery=prompt("Delivery date:",j.delivery);const statusVal=prompt("Status (done / current / upcoming):",j.status);const detail=prompt("Detail:",j.detail);j.phase=phase||j.phase;j.planned=planned!==null?planned:j.planned;j.actual=actual!==null?actual:j.actual;j.delivery=delivery!==null?delivery:j.delivery;j.status=statusVal||j.status;j.detail=detail!==null?detail:j.detail;renderContent();}
+function delJourney(i){if(!confirm("Delete this phase?"))return;state.journey.splice(i,1);renderContent();}
+function addJourney(){state.journey.push({id:nextId(state.journey),phase:"New phase",planned:"",actual:"",delivery:"",status:"upcoming",detail:""});renderContent();}
+const TEMPLATES={actions:{cols:["Item","Owner","Due Date","Status","Priority","Notes"],fields:["item","owner","dueDate","status","priority","notes"],widths:["25%","14%","11%","11%","9%","22%"]},roadmap:{cols:["Item","Dependency","ETA","Status","Notes"],fields:["item","dependency","eta","status","notes"],widths:["25%","18%","12%","12%","25%"]},meetings:{cols:["Date","Meeting","Outcome","Decisions","Follow-Up"],fields:["date","meeting","outcome","decisions","followUp"],widths:["10%","18%","25%","22%","15%"]},delivs:{cols:["Deliverable","Description","Committed","Status","Accepted","Owner"],fields:["deliverable","description","committed","status","acceptedByFord","owner"],widths:["18%","22%","10%","11%","10%","12%"]},comms:{cols:["Date","By","Audience","Summary","Response","Next"],fields:["date","by","audience","summary","response","next"],widths:["9%","12%","12%","22%","22%","15%"]}};
+const FIELD_LABELS={item:"Item",owner:"Owner",dueDate:"Due Date",status:"Status",priority:"Priority",notes:"Notes",dependency:"Dependency",eta:"ETA",date:"Date",meeting:"Meeting",outcome:"Outcome",decisions:"Decisions",followUp:"Follow-Up",deliverable:"Deliverable",description:"Description",committed:"Committed",acceptedByFord:"Accepted by Ford",by:"By",audience:"Audience",summary:"Summary",response:"Response",next:"Next Steps"};
+function renderTable(key){const t=TEMPLATES[key];const rows=state[key];let h='<div style="overflow-x:auto"><table>';h+='<colgroup>'+t.widths.map(w=>'<col style="width:'+w+'">').join("")+'<col style="width:8%"></colgroup>';h+='<thead><tr>'+t.cols.map(c=>'<th>'+c+'</th>').join("")+'<th></th></tr></thead><tbody>';rows.forEach((r,i)=>{h+='<tr>';t.fields.forEach(f=>{let v=r[f]||"";if(f==="status")v=badge(v,STATUS_STYLE);else if(f==="priority")v=badge(v,PRIORITY_STYLE);h+='<td>'+v+'</td>';});h+='<td><button class="edit-btn" onclick="editRow(\''+key+'\','+i+')">edit</button> <button class="del-btn" onclick="delRow(\''+key+'\','+i+')">×</button></td>';h+='</tr>';});h+='</tbody></table></div>';h+='<button class="add-btn" onclick="addRow(\''+key+'\')">+ Add row</button>';return h;}
+function editRow(key,i){const t=TEMPLATES[key];const r=state[key][i];t.fields.forEach(f=>{const label=FIELD_LABELS[f]||f;let opts=null;if(f==="status")opts=["Not Started","In Progress","Completed","At Risk","Blocked"];if(f==="priority")opts=["High","Medium","Low"];if(opts){const val=prompt(label+" ("+opts.join("/")+"):",r[f]);if(val!==null)r[f]=val;}else{const val=prompt(label+":",r[f]);if(val!==null)r[f]=val;}});renderContent();}
+function delRow(key,i){if(!confirm("Delete this row?"))return;state[key].splice(i,1);renderContent();}
+function addRow(key){const t=TEMPLATES[key];const row={id:nextId(state[key])};t.fields.forEach(f=>{row[f]="";});if(row.status!==undefined)row.status="Not Started";if(row.priority!==undefined)row.priority="Medium";state[key].push(row);renderContent();}
+function exportExcel(){const wb=XLSX.utils.book_new();const jData=state.journey.map(j=>({Phase:j.phase,Planned:j.planned,Actual:j.actual,Delivery:j.delivery,Status:j.status,Detail:j.detail}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(jData),"Journey");const aData=state.actions.map(a=>({Item:a.item,Owner:a.owner,"Due Date":a.dueDate,Status:a.status,Priority:a.priority,Notes:a.notes}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(aData),"Action Items");const rData=state.roadmap.map(r=>({Item:r.item,Dependency:r.dependency,ETA:r.eta,Status:r.status,Notes:r.notes}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rData),"Roadmap");const mData=state.meetings.map(m=>({Date:m.date,Meeting:m.meeting,Outcome:m.outcome,Decisions:m.decisions,"Follow-Up":m.followUp}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(mData),"Meetings");const dData=state.delivs.map(d=>({Deliverable:d.deliverable,Description:d.description,Committed:d.committed,Status:d.status,"Accepted by Ford":d.acceptedByFord,Owner:d.owner}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dData),"Deliverables");const cData=state.comms.map(c=>({Date:c.date,By:c.by,Audience:c.audience,Summary:c.summary,Response:c.response,Next:c.next}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cData),"Ford Comms");const name=(state.acct||"dynatrace-tracker")+".xlsx";XLSX.writeFile(wb,name);toast("Exported "+name);}
+function exportSlides(){let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+(state.acct||"Account")+' Tracker</title>';html+='<style>body{font-family:Arial,sans-serif;background:#0d0d1a;color:#f0f0ff;padding:40px}';html+='.slide{page-break-after:always;margin-bottom:40px;padding:30px;background:#1a1a35;border-radius:12px}';html+='h1{font-size:28px;margin-bottom:16px}h2{font-size:20px;color:#8888bb;margin-bottom:14px}';html+='table{width:100%;border-collapse:collapse;margin-top:12px}th{text-align:left;padding:8px 10px;font-size:11px;color:#8888bb;border-bottom:1px solid #3a3a66;text-transform:uppercase}';html+='td{padding:8px 10px;font-size:13px;border-bottom:1px solid #2e2e55}';html+='.badge{border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700}</style></head><body>';html+='<div class="slide"><h1 style="font-size:36px">'+(state.acct||"Account")+'</h1>';html+='<h2>Dynatrace Account Tracker</h2>';const cur=state.journey.find(j=>j.status==="current");if(cur)html+='<p style="font-size:16px;color:#8888bb;margin-top:20px">Current phase: <span style="color:#fff">'+cur.phase+'</span></p>';html+='</div>';html+='<div class="slide"><h1>Journey</h1><table><tr><th>Phase</th><th>Planned</th><th>Actual</th><th>Status</th></tr>';state.journey.forEach(j=>{html+='<tr><td>'+j.phase+'</td><td>'+(j.planned||"—")+'</td><td>'+(j.actual||"—")+'</td><td>'+j.status+'</td></tr>';});html+='</table></div>';html+='<div class="slide"><h1>Action Items</h1><table><tr><th>Item</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th></tr>';state.actions.forEach(a=>{html+='<tr><td>'+a.item+'</td><td>'+a.owner+'</td><td>'+a.dueDate+'</td><td>'+a.status+'</td><td>'+a.priority+'</td></tr>';});html+='</table></div>';html+='<div class="slide"><h1>Roadmap</h1><table><tr><th>Item</th><th>Dependency</th><th>ETA</th><th>Status</th></tr>';state.roadmap.forEach(r=>{html+='<tr><td>'+r.item+'</td><td>'+r.dependency+'</td><td>'+r.eta+'</td><td>'+r.status+'</td></tr>';});html+='</table></div>';html+='<div class="slide"><h1>Deliverables</h1><table><tr><th>Deliverable</th><th>Status</th><th>Owner</th><th>Committed</th></tr>';state.delivs.forEach(d=>{html+='<tr><td>'+d.deliverable+'</td><td>'+d.status+'</td><td>'+d.owner+'</td><td>'+d.committed+'</td></tr>';});html+='</table></div>';html+='</body></html>';const blob=new Blob([html],{type:"text/html"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(state.acct||"tracker")+"-slides.html";a.click();toast("Downloaded slides");}
+async function saveData(){try{const key=state.acct||'default';const res=await fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,data:state})});const result=await res.json();if(result.success){toast("Saved to cloud");const m=document.getElementById("savedMsg");m.style.display="inline";setTimeout(()=>m.style.display="none",2500);}else{toast("Save failed - using local backup");localStorage.setItem("dt_tracker_main",JSON.stringify(state));}}catch(e){console.error('Save error:',e);toast("Offline - saved locally");localStorage.setItem("dt_tracker_main",JSON.stringify(state));}}
+async function loadData(){try{const res=await fetch('/api/data?key=default');const result=await res.json();if(result.success&&result.data){Object.assign(state,result.data);document.getElementById("acctName").value=state.acct||"";updateTitle();return;}}catch(e){console.error('Load error, trying localStorage:',e);}const raw=localStorage.getItem("dt_tracker_main");if(raw){try{Object.assign(state,JSON.parse(raw));document.getElementById("acctName").value=state.acct||"";updateTitle();}catch(e){}}}
+async function resetData(){if(!confirm("Reset all data to template defaults?"))return;try{const key=state.acct||'default';await fetch('/api/data?key='+encodeURIComponent(key),{method:'DELETE'});}catch(e){}localStorage.removeItem("dt_tracker_main");location.reload();}
+async function init(){await loadData();renderTabs();renderContent();}
+init();
+</script>
+</body>
+</html>
