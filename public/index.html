@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynatrace Account Tracker | RSTM Labs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a1a;color:#e0e0ff;overflow-x:hidden}
+.hero{min-height:100vh;display:flex;flex-direction:column;position:relative}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:20px 48px;position:relative;z-index:2}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-brand img{height:28px}
+.nav-brand span{font-size:14px;font-weight:600;color:rgba(255,255,255,0.5);letter-spacing:.04em}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{color:rgba(255,255,255,0.6);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none}
+.nav-cta:hover{background:rgba(255,255,255,0.18)}
+.hero-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;position:relative;z-index:2}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(107,43,255,0.15);border:1px solid rgba(107,43,255,0.3);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:28px;letter-spacing:.03em}
+.hero-badge span{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-size:clamp(36px,5vw,64px);font-weight:800;line-height:1.1;margin-bottom:20px;background:linear-gradient(135deg,#fff 0%,#a78bfa 50%,#6366f1 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(16px,2vw,20px);color:rgba(255,255,255,0.55);max-width:580px;line-height:1.6;margin-bottom:40px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px 36px;border-radius:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(99,102,241,0.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(99,102,241,0.5)}
+.btn-secondary{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;text-decoration:none}
+.btn-secondary:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2)}
+.features{padding:80px 48px;max-width:1100px;margin:0 auto}
+.features h2{font-size:32px;font-weight:700;text-align:center;margin-bottom:12px;color:#fff}
+.features-sub{text-align:center;color:rgba(255,255,255,0.5);font-size:16px;margin-bottom:56px}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.feature-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:28px;transition:all .3s}
+.feature-card:hover{background:rgba(255,255,255,0.06);border-color:rgba(99,102,241,0.3);transform:translateY(-4px)}
+.feature-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+.feature-card h3{font-size:16px;font-weight:700;margin-bottom:8px;color:#fff}
+.feature-card p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6}
+.glow{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(120px);opacity:.15;pointer-events:none}
+.glow-1{background:#6366f1;top:-200px;left:-100px}
+.glow-2{background:#8b5cf6;bottom:-200px;right:-100px}
+.glow-3{background:#2563eb;top:40%;left:50%;transform:translate(-50%,-50%)}
+.footer{text-align:center;padding:40px;border-top:1px solid rgba(255,255,255,0.06)}
+.footer p{font-size:12px;color:rgba(255,255,255,0.25)}
+@media(max-width:768px){.nav{padding:16px 20px}.features{padding:60px 20px}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
+
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="https://cdn.simpleicons.org/dynatrace/ffffff" alt="Dynatrace" onerror="this.outerHTML='<span style=font-size:18px;font-weight:800;color:#fff;font-style:italic>dynatrace</span>'">
+      <span>Account Tracker</span>
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="dashboard.html" class="nav-cta">Open Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="hero-content">
+    <div class="hero-badge"><span></span> Built by RSTM Labs</div>
+    <h1>Track Every Account.<br>Miss Nothing.</h1>
+    <p class="hero-sub">A unified tracker for Dynatrace account journeys, action items, roadmap dependencies, meetings, and stakeholder communications.</p>
+    <div class="hero-actions">
+      <a href="dashboard.html" class="btn-primary">Open Tracker <span style="font-size:18px">&rarr;</span></a>
+      <a href="#features" class="btn-secondary">Learn More</a>
+    </div>
+  </div>
+</div>
+
+<section class="features" id="features">
+  <h2>Everything in One Place</h2>
+  <p class="features-sub">Stop juggling spreadsheets. Track the full lifecycle of every account engagement.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(99,102,241,0.15);color:#818cf8">&#9776;</div>
+      <h3>Journey Timeline</h3>
+      <p>Visual milestone tracker with planned vs. actual dates, variance calculations, and status indicators for every phase.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(16,185,129,0.15);color:#34d399">&#10003;</div>
+      <h3>Action Items</h3>
+      <p>Track open actions with owners, due dates, priority levels, and real-time status updates across teams.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24">&#9733;</div>
+      <h3>Product Roadmap</h3>
+      <p>Monitor product dependencies, ETAs, and delivery status so nothing blocks your account strategy.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(239,68,68,0.15);color:#f87171">&#128172;</div>
+      <h3>Meetings & Comms</h3>
+      <p>Log every meeting, decision, and stakeholder communication with full audit trail and follow-up tracking.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa">&#128202;</div>
+      <h3>Deliverables</h3>
+      <p>Track committed deliverables, acceptance status, and ownership for complete accountability.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(168,85,247,0.15);color:#c084fc">&#9729;</div>
+      <h3>Cloud Persistence</h3>
+      <p>All data stored in Neon Postgres. Access your tracker from any device, any browser, anytime.</p>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <p>&copy; 2026 RSTM Labs &middot; Dynatrace Account Tracker</p>
+</div>
+
+</body>
+</html>
